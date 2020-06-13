@@ -22,13 +22,13 @@ class colImg():
             self.img[:,:,i] = (self.img[:,:,i] - local_min)*((gmax-gmin)/(local_max-local_min)) + gmin
 
 
-    def genHists(self):
+    def genHists(self,histName):
         histlist = []
         for i in range(0,3):
             histlist.append(cv2.calcHist([self.img],[i],None,[256],[0,256]))
             for i in range(0,len(histlist)):
                 pyplot.plot(histlist[i])
-                pyplot.savefig('./histogram_channel{}'.format(i))
+                pyplot.savefig(str(histName+'_channel{}').format(i))
                 pyplot.clf()
 
 
@@ -56,10 +56,10 @@ class greyImg():
         print('running for channel 0\n\t{0}th percentile:{1}\n\t{2}th percentile:{3}'.format(low,local_min,high,local_max))
         self.img[:,:] = (self.img[:,:] - local_min)*((gmax-gmin)/(local_max-local_min)) + gmin
 
-    def genHists(self):
+    def genHists(self,histName):
         histogram = cv2.calcHist([self.img],[0],None,[256],[0,256])
         pyplot.plot(histogram)
-        pyplot.savefig('./histogram_grayscale')
+        pyplot.savefig(histName)
         pyplot.clf()
 
     def write(self,outputFilename):
@@ -67,3 +67,33 @@ class greyImg():
 
     def colorize(self):
         self.img = cv2.cvtColor(self.img,cv2.COLOR_GRAY2BGR)
+
+
+class lumImg():
+
+    def __init__(self,inputFilename):
+        temp = cv2.imread(inputFilename)
+        self.img = cv2.cvtColor(temp,cv2.COLOR_BGR2YCR_CB)
+
+    def info(self):
+        print('shape:{0}\ndepth:{1}'.format(self.img.shape,self.img.dtype))
+
+    def write(self,outputFilename):
+        self.img = cv2.cvtColor(self.img,cv2.COLOR_YCrCb2BGR)
+        cv2.imwrite(outputFilename,self.img)
+
+    def genHists(self,histName):
+        histogram = cv2.calcHist([self.img],[0],None,[256],[0,256])
+        pyplot.plot(histogram)
+        pyplot.savefig(str(histName))
+        pyplot.clf()
+
+
+    def conStretchY(self,low,high):
+        local_min = numpy.percentile(self.img[:,:,0],low)
+        local_max = numpy.percentile(self.img[:,:,0],high)
+        gmin=0
+        gmax=255
+        print('running for channel Y\n\t{0}th percentile:{1}\n\t{2}th percentile:{3}'.format(low,local_min,high,local_max))
+        #self.img[:,:,0] = (self.img[:,:,0] + 25)%256
+        self.img[:,:,0] = (self.img[:,:,0] - local_min)*((gmax-gmin)/(local_max-local_min)) + gmin
